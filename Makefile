@@ -1,3 +1,6 @@
+$(CC) = gcc
+$(RM) = rm
+
 all: bin bin/unpak
 
 bin:
@@ -13,4 +16,4 @@ bin/pak.o: pak.c
 	$(CC) -o bin/pak.o -c pak.c
 
 clean:
-	rm -rf bin/
+	$(RM) -r bin/
