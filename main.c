@@ -17,7 +17,7 @@ limitations under the License. */
 
 void usage(char* prog_name)
 {
-	printf("%s <.pak file> <target directory>\n", prog_name);
+	fprintf(stderr, "usage: %s <.pak file> <target directory>\n", prog_name);
 }
 
 int main(int argc, char* argv[])
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 	pakheader_t* hdr = (pakheader_t*) unpak_malloc(sizeof(pakheader_t));
 	if (!hdr)
 	{
-		printf("Error allocating memory...\n");
+		fprintf(stderr, "Error allocating memory...\n");
 		fclose(f);
 		return -1;
 	}
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	int ret = unpak_read_header(hdr, f);
 	if (ret)
 	{
-		printf("Error reading header... (ret = %i)\n", ret);
+		fprintf(stderr, "Error reading header... (ret = %i)\n", ret);
 		unpak_free(hdr);
 		fclose(f);
 		return -1;
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 	dirheader_t* dhdr = (dirheader_t*) unpak_malloc(sizeof(dirheader_t));
 	if (!dhdr)
 	{
-		printf("Error allocating memory...\n");
+		fprintf(stderr, "Error allocating memory...\n");
 		unpak_free(hdr);
 		fclose(f);
 		return -1;
@@ -63,6 +63,13 @@ int main(int argc, char* argv[])
 
 	int i;
 	int dhdr_num = unpak_dirheader_num(hdr, f);
+
+	if (dhdr_num <= 0)
+	{
+		fprintf(stderr, "Error: Invalid number of dirheaders!\n");
+		return -1;
+	}
+
 	printf("Number of files: %i\n", dhdr_num);
 
 	for (i = 0; i < dhdr_num; i++)
@@ -72,7 +79,7 @@ int main(int argc, char* argv[])
 		ret = unpak_read_dirheader(dhdr, hdr, i, f);
 		if (ret)
 		{
-			printf("Error reading dirheader... (ret = %i)\n", ret);
+			fprintf(stderr, "Error reading dirheader... (ret = %i)\n", ret);
 			goto skip_extracting;
 		}
 
@@ -93,27 +100,27 @@ int main(int argc, char* argv[])
 		printf("dirname = %s ", tpath_dirname);
 		mkdir(tpath_dirname, S_IRUSR | S_IWUSR);
 		printf("target_path = %s\n", target_path);*/
-		
+
 		/* TODO: Make folder creation more portable */
 		char* cmd = (char*) unpak_malloc(tpath_length + sizeof(char) * 11);
 		memset(cmd, 0, tpath_length + sizeof(char) * 11);
 		snprintf(cmd, tpath_length + sizeof(char) * 9, "mkdir -p \"%s\"", tpath_dirname);
 		ret = system(cmd);
-		if (ret != 0) printf("\nFailed creating folders...\n");
+		if (ret != 0) fprintf(stderr, "\nFailed creating folders...\n");
 		unpak_free(cmd);
 
 		FILE* f_out = fopen(target_path, "w");
 		if (!f_out)
 		{
 			perror("\nError creating output file");
-			printf("\n");
+			fprintf(stderr, "\n");
 			goto skip_extracting;
 		}
 
 		void* buf = unpak_malloc(dhdr->size);
 		if (!buf)
 		{
-			printf("\nError allocating buffer...\n");
+			fprintf(stderr, "\nError allocating buffer...\n");
 			fclose(f_out);
 			goto skip_extracting;
 		}
@@ -121,7 +128,7 @@ int main(int argc, char* argv[])
 		ret = unpak_read_file(dhdr, buf, f);
 		if (ret)
 		{
-			printf("\nError reading file... (ret = %i)\n", ret);
+			fprintf(stderr, "\nError reading file... (ret = %i)\n", ret);
 			unpak_free(buf);
 			fclose(f_out);
 			goto skip_extracting;
@@ -131,7 +138,7 @@ int main(int argc, char* argv[])
 		if (ret == 0)
 		{
 			perror("\nError writing to output file");
-			printf("\n");
+			fprintf(stderr, "\n");
 			unpak_free(buf);
 			fclose(f_out);
 			goto skip_extracting;
@@ -143,7 +150,7 @@ int main(int argc, char* argv[])
 		goto extracting_ok;
 
 skip_extracting:
-		if (skipped) printf("\nSkipped extracting...\n");
+		if (skipped) fprintf(stderr, "\nSkipped extracting...\n");
 		skipped = 1;
 
 extracting_ok:
