@@ -1,10 +1,18 @@
-$(CC) = gcc
-$(RM) = rm
+# Selects the compiler used
+# default: gcc
+CC = gcc
+
+# Selects the command for deleting files & folders
+RM = rm
+
+# Selects the command for creating a directory
+MKDIR = mkdir
+
 
 all: bin bin/unpak
 
 bin:
-	mkdir bin/
+	$(MKDIR) bin/
 
 bin/unpak: bin/main.o bin/pak.o
 	$(CC) -o bin/unpak bin/main.o bin/pak.o
