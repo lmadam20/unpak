@@ -28,7 +28,6 @@ void usage(char* prog_name)
  */
 int mkdir2(char* path)
 {
-	printf("mkdir2: path = %s\n", path);
 	size_t len = strlen(path);
 
 	char* temp = (char*) malloc(len * sizeof(char) + 1);
@@ -38,8 +37,6 @@ int mkdir2(char* path)
 	memcpy(temp, path, len * sizeof(char));
 	if (temp[len - 1] == '/')
 		temp[len - 1] = 0;
-
-	printf("mkdir2: temp = %s\n", temp);
 
 	char* ptr = temp;
 	char* end = (char*)(temp + len * sizeof(char));
@@ -51,14 +48,12 @@ int mkdir2(char* path)
 		if (*ptr == '/') // found a new subdir
 		{
 			*ptr = 0;
-			printf("mkdir2: temp = %s\n", temp);
 			mkdir(temp, 0777);
 			*ptr = '/';
 		}
 		ptr++;
 	}
 
-	printf("mkdir2: temp (post) = %s\n", temp);
 	mkdir(temp, 0777);
 
 	return 0;
