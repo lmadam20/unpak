@@ -24,6 +24,9 @@ void unpak_free(void* ptr)
 	if (ptr != NULL) free(ptr);
 }
 
+/*
+ * Reads the file header into hdr.
+ */
 int unpak_read_header(pakheader_t* hdr, FILE* f)
 {
 	if (hdr == NULL) return -1;
@@ -35,6 +38,9 @@ int unpak_read_header(pakheader_t* hdr, FILE* f)
 	return 0;
 }
 
+/*
+ * Returns the number of dirheaders of hdr.
+ */
 int unpak_dirheader_num(pakheader_t* hdr, FILE* f)
 {
 	if (hdr == NULL) return -1;
@@ -43,6 +49,9 @@ int unpak_dirheader_num(pakheader_t* hdr, FILE* f)
 	return hdr->size / sizeof(dirheader_t);
 }
 
+/*
+ * Reads dhdr at index 'index' through hdr and f.
+ */
 int unpak_read_dirheader(dirheader_t* dhdr, pakheader_t* hdr, int index, FILE* f)
 {
 	if (dhdr == NULL || hdr == NULL) return -1;
@@ -56,6 +65,9 @@ int unpak_read_dirheader(dirheader_t* dhdr, pakheader_t* hdr, int index, FILE* f
 	return 0;
 }
 
+/*
+ * Reads the file of dhdr into the buffer target.
+ */
 int unpak_read_file(dirheader_t* dhdr, void* target, FILE* f)
 {
 	if (target == NULL || dhdr == NULL) return -1;
