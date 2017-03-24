@@ -14,10 +14,54 @@ limitations under the License. */
 
 #include "pak.h"
 #include <libgen.h>
+#include <sys/stat.h>
 
 void usage(char* prog_name)
 {
 	fprintf(stderr, "usage: %s <.pak file> <target directory>\n", prog_name);
+}
+
+/* The 'standard' mkdir doesn't allow recursive directory creation.
+ * This one is capable of it :)
+ *
+ * TODO Non-Unix compatibility
+ */
+int mkdir2(char* path)
+{
+	printf("mkdir2: path = %s\n", path);
+	size_t len = strlen(path);
+
+	char* temp = (char*) malloc(len * sizeof(char) + 1);
+	if (!temp) return -1;
+
+	memset(temp, 0, len * sizeof(char) + 1);
+	memcpy(temp, path, len * sizeof(char));
+	if (temp[len - 1] == '/')
+		temp[len - 1] = 0;
+
+	printf("mkdir2: temp = %s\n", temp);
+
+	char* ptr = temp;
+	char* end = (char*)(temp + len * sizeof(char));
+
+	while (*ptr++ == '/'); // skip over root directory
+
+	while (ptr < end)
+	{
+		if (*ptr == '/') // found a new subdir
+		{
+			*ptr = 0;
+			printf("mkdir2: temp = %s\n", temp);
+			mkdir(temp, 0777);
+			*ptr = '/';
+		}
+		ptr++;
+	}
+
+	printf("mkdir2: temp (post) = %s\n", temp);
+	mkdir(temp, 0777);
+
+	return 0;
 }
 
 int main(int argc, char* argv[])
@@ -96,18 +140,11 @@ int main(int argc, char* argv[])
 		strcpy(tpath_dirname, target_path);
 		tpath_dirname = dirname(tpath_dirname);
 
-		/*printf("[DBG] target_path = %s ", target_path);
-		printf("dirname = %s ", tpath_dirname);
-		mkdir(tpath_dirname, S_IRUSR | S_IWUSR);
-		printf("target_path = %s\n", target_path);*/
-
-		/* TODO: Make folder creation more portable */
-		char* cmd = (char*) unpak_malloc(tpath_length + sizeof(char) * 11);
-		memset(cmd, 0, tpath_length + sizeof(char) * 11);
-		snprintf(cmd, tpath_length + sizeof(char) * 9, "mkdir -p \"%s\"", tpath_dirname);
-		ret = system(cmd);
-		if (ret != 0) fprintf(stderr, "\nFailed creating folders...\n");
-		unpak_free(cmd);
+		if (mkdir2(tpath_dirname))
+		{
+			perror("\nError creating output directory structure");
+			goto skip_extracting;
+		}
 
 		FILE* f_out = fopen(target_path, "w");
 		if (!f_out)
