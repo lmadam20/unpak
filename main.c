@@ -21,6 +21,59 @@ void usage(char* prog_name)
 	fprintf(stderr, "usage: %s <.pak file> <target directory>\n", prog_name);
 }
 
+int chkpath(char* path)
+{
+	size_t len = strlen(path);
+
+	char* temp = (char*) malloc(len * sizeof(char) + 1);
+	if (!temp) return -1;
+
+	memset(temp, 0, len * sizeof(char) + 1);
+	memcpy(temp, path, len * sizeof(char));
+
+	char* ptr = temp;
+	char* end = (char*)(temp + len * sizeof(char));
+
+	unsigned long int count_backdir = 0;
+	unsigned long int count_fwrddir = 0;
+	char* last_sep = ptr;
+
+	while (*ptr == '/') // skip over root directory
+	{
+		last_sep = ptr;
+	        ptr++;
+	}
+
+	while (ptr < end)
+	{
+		if (*ptr == '/') // found a new subdir
+		{
+			*ptr = '\0';
+			last_sep++;
+			if (!strncmp(last_sep, "..", (size_t)(ptr - last_sep)))
+			{
+				count_backdir++;
+			}
+			else
+			{
+				if (strncmp(last_sep, ".", (size_t)(ptr - last_sep)))
+				{
+					count_fwrddir++;
+				}
+			}
+
+			*ptr = '/';
+			last_sep = ptr;
+		}
+
+		ptr++;
+	}
+
+	free(temp);
+
+	return count_backdir > count_fwrddir ? -2 : 0;
+}
+
 /* The 'standard' mkdir doesn't allow recursive directory creation.
  * This one is capable of it :)
  *
@@ -55,6 +108,8 @@ int mkdir2(char* path)
 	}
 
 	mkdir(temp, 0777);
+
+	free(temp);
 
 	return 0;
 }
@@ -134,6 +189,12 @@ int main(int argc, char* argv[])
 		memset(tpath_dirname, 0, tpath_length);
 		strcpy(tpath_dirname, target_path);
 		tpath_dirname = dirname(tpath_dirname);
+
+		if (chkpath(tpath_dirname))
+		{
+			fprintf(stderr, "\nIllegal path in dhdr, skipping this file...\n");
+			goto skip_extracting;
+		}
 
 		if (mkdir2(tpath_dirname))
 		{
