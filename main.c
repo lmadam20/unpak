@@ -177,7 +177,8 @@ int main(int argc, char* argv[])
 			goto skip_extracting;
 		}
 
-		printf("Extracting %s (%i of %i)... ", dhdr->name, i + 1, dhdr_num);
+		printf("[%i/%i] Extracting %s... ", i + 1, dhdr_num, dhdr->name);
+		fflush(stdout);
 
 		int tpath_length = ((strlen(dhdr->name) + strlen(argv[2])) + 1);
 		char* target_path = (char*) unpak_malloc(tpath_length);
@@ -249,6 +250,8 @@ skip_extracting:
 extracting_ok:
 		if (!skipped) printf("\t[OK]\n");
 
+extracting_done:
+		fflush(stderr);
 		unpak_free(target_path);
 		unpak_free(tpath_dirname);
 
